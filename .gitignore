@@ -1,0 +1,4 @@
+.venv/
+_pycache/
+.vscode/
+app.py
