@@ -19,3 +19,4 @@ Web application using FastAPI that allows users to upload CSV files to Google Cl
 ### Run
 
 - `uvicorn fast_api:app --reload`
+- `go to the site/docs and run tests`

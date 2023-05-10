@@ -1,29 +1,39 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Form
 from pydantic import BaseModel
 from google.cloud import storage, bigquery
+from typing import Annotated
 
 
-class Querry(BaseModel):
-    querry: str
+class Gcloud_info(BaseModel):
+    gcloud_service_account_key: str
+    csv_file_id_or_querry: str
 
 
 app = FastAPI()
-client = bigquery.Client()
 
 
-@app.post("/uploadfile/{csv_file_id}")
-def create_upload_file(csv_file_id, csv_file: UploadFile):
+@app.post("/uploadfile/")
+def create_upload_file(
+    gcloud_service_api_key: Annotated[str, Form()],
+    csv_file_id: Annotated[str, Form()],
+    csv_file: UploadFile,
+):
+    client = bigquery.Client()
+
     csv_content = csv_file.file.read()
-    print(csv_file.filename.split(".")[-1])
 
     if csv_file.filename.split(".")[-1] != "csv":
-        raise HTTPException(status_code=404, detail="The file you chose is not a csv")
+        raise HTTPException(status_code=504, detail="The file you chose is not a csv")
 
     # Uploads file to Google Cloud Storage
-    storage_client = storage.Client()
+    storage_client = storage.Client(
+        client_options={
+            "quota_project_id": "omniproject-51",
+            "api_key": gcloud_service_api_key,
+        }
+    )
     bucket_name = storage_client.bucket("api_tester")
     blob = bucket_name.blob(csv_file_id)
-    generation_match_precondition = 0
 
     blob.upload_from_string(csv_content)
 
@@ -31,7 +41,6 @@ def create_upload_file(csv_file_id, csv_file: UploadFile):
     table_id = f"omniproject-51.api_testing.{csv_file_id}"
 
     job_config = bigquery.LoadJobConfig(
-        skip_leading_rows=1,
         autodetect=True,
         source_format=bigquery.SourceFormat.CSV,
     )
@@ -45,12 +54,21 @@ def create_upload_file(csv_file_id, csv_file: UploadFile):
             status_code=404, detail="The csv file has incosistencies or is not a csv"
         )
     client.get_table(table_id)
+    return "succesfull upload"
 
 
-@app.post("/make_querry")
-def querry(item: Querry):
-    query = item.querry
-    querry_job = client.query(query)
+@app.post("/make_querry/")
+def querry(
+    querry: Annotated[str, Form()], gcloud_service_api_key: Annotated[str, Form()]
+):
+    client = bigquery.Client(
+        client_options={
+            "quota_project_id": "omniproject-51",
+            "api_key": gcloud_service_api_key,
+        }
+    )
+
+    querry_job = client.query(querry)
     try:
         data = querry_job.result()
     except:
