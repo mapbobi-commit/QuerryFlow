@@ -1,13 +1,6 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Form
-from pydantic import BaseModel
 from google.cloud import storage, bigquery
 from typing import Annotated
-
-
-class Gcloud_info(BaseModel):
-    gcloud_service_account_key: str
-    csv_file_id_or_querry: str
-
 
 app = FastAPI()
 
@@ -23,7 +16,7 @@ def create_upload_file(
     csv_content = csv_file.file.read()
 
     if csv_file.filename.split(".")[-1] != "csv":
-        raise HTTPException(status_code=504, detail="The file you chose is not a csv")
+        raise HTTPException(status_code=400, detail="The file you chose is not a csv")
 
     # Uploads file to Google Cloud Storage
     storage_client = storage.Client(
@@ -51,7 +44,7 @@ def create_upload_file(
         load_job.result()
     except:
         raise HTTPException(
-            status_code=404, detail="The csv file has incosistencies or is not a csv"
+            status_code=400, detail="The csv file has incosistencies or is not a csv"
         )
     client.get_table(table_id)
     return "succesfull upload"
@@ -72,7 +65,7 @@ def querry(
     try:
         data = querry_job.result()
     except:
-        raise HTTPException(status_code=404, detail="The querry failed")
+        raise HTTPException(status_code=400, detail="The querry failed")
     rows = list(data)
 
     return rows
