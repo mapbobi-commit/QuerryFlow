@@ -6,15 +6,15 @@ Web application using FastAPI that allows users to upload CSV files to Google Cl
 
 - python
 - pip
-- [gcloud service account key](https://cloud.google.com/iam/docs/keys-create-delete#iam-service-account-keys-create-gcloud)
+- [gcloud service account key](https://cloud.google.com/docs/authentication/api-keys)
 
 ## How to run
 
 ### Virtual environment
 
-- `/> python -m venv .venv`
-- `/> source .venv/bin/activate`
-- `/> python -m pip install -r requirements.txt`
+- `$ python -m venv .venv`
+- `$ source .venv/bin/activate`
+- `$ python -m pip install -r requirements.txt`
 
 ### Run
 
